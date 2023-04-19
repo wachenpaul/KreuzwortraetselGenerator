@@ -24,10 +24,10 @@ def get_random_word():
     return random.choice(WORDLIST)
 
 
-def get_word_with_letter(letter):
+def get_word_with_letter(letter, exclude=[]):
     # return a word that contains the given letter
     for word in WORDLIST:
-        if letter in word and word not in [word.word for word in CROSSWORDS]:
+        if letter in word and word not in [word.word for word in CROSSWORDS] and word not in exclude:
             return word, word.index(letter)
 
 
@@ -103,15 +103,13 @@ def check_overlap(word):
     ALL_LETTERS = [letter for word in CROSSWORDS for letter in word.letters]
 
     for letter in ALL_LETTERS:
-        if letter.x == word.letters[0].x and letter.y == word.letters[0].y and letter.related_words[0] != word:
-            print(f"Overlap found for word {word.word}")
-            print(
-                f"Letter {letter.letter} at ({letter.x}, {letter.y}) is already in word {letter.related_words[0].word}")
-            return True
+        for word_letter in word.letters:
+            if letter.x == word_letter.x and letter.y == word_letter.y and letter.letter != word_letter.letter:
+                print(
+                    f"{word_letter.x}, {word_letter.y} is already taken by {letter.letter} with coordinates {letter.x}, {letter.y}")
+                return True
     print(f"No overlap found for word {word.word}")
     return False
-
-    print(f"No overlap found for word {word.word}")
 
 
 class Letter:
@@ -157,8 +155,19 @@ class Word:
 
         new_word.set_coordinates(crossword_index)
 
-        if check_overlap(new_word):
-            self.create_crossword()
+        old_words = []
+        while check_overlap(new_word):
+            old_words.append(new_word.word)
+            word_index = random.randint(0, len(self.word) - 1)
+            crossword, crossword_index = get_word_with_letter(
+                self.word[word_index], exclude=old_words)
+            print(
+                f"got new crossword: {crossword} for letter {self.word[word_index]} with index {word_index}")
+            new_word = Word(crossword, not self.horizontal)
+            self.letters[word_index].related_words.append(new_word)
+            new_word.letters[crossword_index] = self.letters[word_index]
+
+            new_word.set_coordinates(crossword_index)
 
         CROSSWORDS.append(new_word)
 
@@ -167,7 +176,7 @@ load_words()
 
 CROSSWORDS.append(Word(get_random_word()))
 
-for i in range(10):
+for i in range(50):
     CROSSWORDS[random.randint(0, len(CROSSWORDS) - 1)].create_crossword()
 
 display_crossword()
