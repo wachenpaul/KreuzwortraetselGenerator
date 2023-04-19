@@ -104,6 +104,7 @@ def check_overlap(word):
 
     for letter in ALL_LETTERS:
         for word_letter in word.letters:
+            print(word_letter.related_words[0].horizontal)
             if letter.x == word_letter.x and letter.y == word_letter.y and letter.letter != word_letter.letter:
                 print(
                     f"{word_letter.x}, {word_letter.y} is already taken by {letter.letter} with coordinates {letter.x}, {letter.y}")
@@ -176,7 +177,7 @@ load_words()
 
 CROSSWORDS.append(Word(get_random_word()))
 
-for i in range(50):
+for i in range(10):
     CROSSWORDS[random.randint(0, len(CROSSWORDS) - 1)].create_crossword()
 
 display_crossword()
