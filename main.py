@@ -55,7 +55,7 @@ def display_crossword():
 
     max_word_len = max(len(word.word) for word in CROSSWORDS)
     # calculate square_size based on the length of the longest word
-    square_size = 1/max_word_len * 750
+    square_size = 500 / max_word_len
     width = (max_x - min_x + 1) * square_size
     height = (max_y - min_y + 1) * square_size
 
@@ -104,13 +104,42 @@ def check_overlap(word):
 
     for letter in ALL_LETTERS:
         for word_letter in word.letters:
-            print(word_letter.related_words[0].horizontal)
             if letter.x == word_letter.x and letter.y == word_letter.y and letter.letter != word_letter.letter:
                 print(
                     f"{word_letter.x}, {word_letter.y} is already taken by {letter.letter} with coordinates {letter.x}, {letter.y}")
                 return True
+
+            origin = (word_letter.x, word_letter.y)
+            # print out if the letter is a crossing of two words or not. This is determined by the number of related words, 1 means it is not a crossing, 2 means it is a crossing
+            if not len(letter.related_words) == 2:
+                # if it is not a crossing, check around the letter so that words that dont have the same related word are not touching each other
+                print(
+                    f"checking around {word_letter.letter} at {word_letter.x}, {word_letter.y}")
+                for x in range(-1, 2):
+                    for y in range(-1, 2):
+                        if x == 0 and y == 0:
+                            continue
+                        if (word_letter.x + x, word_letter.y + y) == origin:
+                            continue
+                        # TODO
+
     print(f"No overlap found for word {word.word}")
     return False
+
+
+def check_common_list_item(list1, list2):
+    for item in list1:
+        if item in list2:
+            return True
+    return False
+
+
+def search_coordinate(x, y):
+    for word in CROSSWORDS:
+        for letter in word.letters:
+            if letter.x == x and letter.y == y:
+                return letter
+    return None
 
 
 class Letter:
@@ -159,6 +188,8 @@ class Word:
         old_words = []
         while check_overlap(new_word):
             old_words.append(new_word.word)
+            # remove the old word from the list of related words
+            self.letters[word_index].related_words.remove(new_word)
             word_index = random.randint(0, len(self.word) - 1)
             crossword, crossword_index = get_word_with_letter(
                 self.word[word_index], exclude=old_words)
@@ -177,7 +208,7 @@ load_words()
 
 CROSSWORDS.append(Word(get_random_word()))
 
-for i in range(10):
+for i in range(2):
     CROSSWORDS[random.randint(0, len(CROSSWORDS) - 1)].create_crossword()
 
 display_crossword()
